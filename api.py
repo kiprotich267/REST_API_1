@@ -18,19 +18,21 @@ class UserModel(db.Model):
     def __repr__(self):
         return f"{self.username} {self.email}"
     
-
+ # request parser
 user_args = reqparse.RequestParser()
 user_args.add_argument('username', type=str, required=True, help="Username cannot be blank" )
 user_args.add_argument('email', type=str, required=True, help="Email cannot be blank" )
 
+ # output field
 user_fields = {
     'id': fields.Integer,
     'username': fields.String,
     'email': fields.String,
 }
 
-
-class User(Resource):
+ # resource for all users
+class Users(Resource):
+    #Get all users
     @marshal_with(user_fields)
     def get(self):
         users = UserModel.query.all()
@@ -38,7 +40,52 @@ class User(Resource):
             abort(404, message='users not found')
         return users 
     
-api.add_resource(User, '/api/users')
+    #create a user
+    @marshal_with(user_fields)
+    def post(self):
+        args = user_args.parse_args()
+        new_user = UserModel(username=args['username'], email=args['email'])
+        db.session.add(new_user)
+        db.session.commit()
+        users = UserModel.query.all()
+        return users, 201
+    
+
+class user(Resource):
+    @marshal_with(user_fields)
+    def get(self, id):
+        user = UserModel.query.filter_by(id=id).first()
+        if not user:
+            abort(404, message="user not found")
+        return user, 200
+    
+    @marshal_with(user_fields)
+    def patch(self, id):
+        args = user_args.parse_args()
+        user = UserModel.query.filter_by(id=id).first()
+        if not user:
+            abort(404, message="No user with that id")
+        user.username = args['username']
+        user.email = args['email']
+        db.session.commit()
+        return user, 200
+    
+    @marshal_with(user_fields)
+    def delete(self, id):
+        user = UserModel.query.filter_by(id=id).first()
+        if not user:
+             abort(404, message="cannot delete a non existing user")
+        db.session.delete(user)
+        db.session.commit()
+        return "user deleted succesfully"
+
+        
+
+        
+
+#Api endpoints
+api.add_resource(Users, '/api/users')
+api.add_resource(user, '/api/users/<int:id>')
 
 
 
