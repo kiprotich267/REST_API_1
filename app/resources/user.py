@@ -1,32 +1,23 @@
 
 from flask_restful import Resource, marshal_with, fields, reqparse, abort
 from app.extension import db
+from app.models.user import UserModel
 
 
 
-
-
-
-
-#Database model
-class UserModel(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(80), unique=True, nullable=False)
-
-    def __repr__(self):
-        return f"{self.username} {self.email}"
-    
  # request parser
 user_args = reqparse.RequestParser()
 user_args.add_argument('username', type=str, required=True, help="Username cannot be blank" )
 user_args.add_argument('email', type=str, required=True, help="Email cannot be blank" )
+user_args.add_argument('password', type=str, required=True, help="Password cannot be blank" )
 
  # output field
 user_fields = {
     'id': fields.Integer,
     'username': fields.String,
     'email': fields.String,
+    'password': fields.String,
+
 }
 
  # resource for all users
@@ -43,12 +34,18 @@ class Users(Resource):
     @marshal_with(user_fields)
     def post(self):
         args = user_args.parse_args()
-        new_user = UserModel(username=args['username'], email=args['email'])
-        db.session.add(new_user)
-        db.session.commit()
+        try:
+            new_user = UserModel(username=args['username'], email=args['email'], password=args['password'])
+            db.session.add(new_user)
+            db.session.commit()
+            users = UserModel.query.all()
+            return users, 201
+        except Exception as e:
+            db.session.rollback()
+            abort(400, message=f"there was an error creating user: {e}")
         users = UserModel.query.all()
         return users, 201
-    
+
 
 class user(Resource):
     @marshal_with(user_fields)
@@ -66,6 +63,7 @@ class user(Resource):
             abort(404, message="No user with that id")
         user.username = args['username']
         user.email = args['email']
+        user.password = args['password']
         db.session.commit()
         return user, 200
     
