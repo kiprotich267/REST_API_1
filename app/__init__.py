@@ -1,7 +1,7 @@
 from flask import Flask 
 from flask_restful import Api
 from app.resources.user import Users, user
-from app.resources.teacher import Teachers
+from app.resources.teacher import Teachers, New_Teacher
 from app.extension import db
 from config import Config
 from flask_migrate import Migrate
@@ -21,3 +21,4 @@ migrate = Migrate(app, db)
 api.add_resource(Users, '/api/users')
 api.add_resource(user, '/api/users/<int:id>')
 api.add_resource(Teachers, '/api/teachers')
+api.add_resource(New_Teacher, '/api/teachers/<int:teacher_id>')
