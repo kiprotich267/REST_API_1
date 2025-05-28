@@ -20,6 +20,46 @@ enrollment_fields = {
 class Enrollments(Resource):
     @marshal_with(enrollment_fields)
     def get(self):
+        """
+        Get all enrollments
+        ---
+        tags:
+          - Enrollments
+        summary: Retrieve all enrollments
+        description: This endpoint retrieves all enrollments from the system.
+        responses:
+          200:
+            description: List of all enrollments retrieved successfully
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: The unique identifier of the enrollment
+                  student_id:
+                    type: integer
+                    description: The ID of the student enrolled
+                  course_id:
+                    type: integer
+                    description: The ID of the course in which the student is enrolled
+                  enrollment_date:
+                    type: string
+                    format: date-time
+                    description: The date when the student was enrolled in the course
+                  status:
+                    type: string
+                    description: The status of the enrollment (e.g., active, completed, dropped)
+          404:
+            description: Enrollments not found
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: Error message indicating that no enrollments were found
+        """
         enrollments = EnrollmentModel.query.all()
         if not enrollments:
             abort(404, message='Enrollments not found')
@@ -27,6 +67,44 @@ class Enrollments(Resource):
 
     @marshal_with(enrollment_fields)
     def post(self):
+        """
+        Create a new enrollment
+        ---
+        tags:
+          - Enrollments
+        summary: Create a new enrollment
+        description: This endpoint allows the creation of a new enrollment for a student in a course.
+        responses:
+          201:
+            description: Enrollment created successfully
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  description: The unique identifier of the newly created enrollment
+                student_id:
+                  type: integer
+                  description: The ID of the student enrolled
+                course_id:
+                  type: integer
+                  description: The ID of the course in which the student is enrolled
+                enrollment_date:
+                  type: string
+                  format: date-time
+                  description: The date when the student was enrolled in the course
+                status:
+                  type: string
+                  description: The status of the enrollment (e.g., active, completed, dropped)
+          400:
+            description: Error creating enrollment
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: Error message indicating that the enrollment could not be created
+        """
         args = enrollment_args.parse_args()
         try:
             enrollment = EnrollmentModel(
@@ -44,6 +122,50 @@ class Enrollments(Resource):
 class Enrollment(Resource):
     @marshal_with(enrollment_fields)
     def get(self, id):
+        """
+        Get an enrollment by id
+        ---
+        tags:
+          - Enrollments
+        summary: Retrieve an enrollment by ID
+        description: This endpoint retrieves an enrollment by its unique identifier (ID).
+        parameters:
+          - in: path
+            name: id
+            required: true
+            type: integer
+            description: The unique identifier of the enrollment to retrieve
+        responses:
+            200:
+                description: Enrollment retrieved successfully
+                schema:
+                type: object
+                properties:
+                    id:
+                    type: integer
+                    description: The unique identifier of the enrollment
+                    student_id:
+                    type: integer
+                    description: The ID of the student enrolled
+                    course_id:
+                    type: integer
+                    description: The ID of the course in which the student is enrolled
+                    enrollment_date:
+                    type: string
+                    format: date-time
+                    description: The date when the student was enrolled in the course
+                    status:
+                    type: string
+                    description: The status of the enrollment (e.g., active, completed, dropped)
+            404:
+                description: Enrollment not found
+                schema:
+                type: object
+                properties:
+                    message:
+                    type: string
+                    description: Error message indicating that the enrollment was not found
+            """
         enrollment = EnrollmentModel.query.filter_by(id=id).first()
         if not enrollment:
             abort(404, message='Enrollment not found')
@@ -51,6 +173,58 @@ class Enrollment(Resource):
 
     @marshal_with(enrollment_fields)
     def patch(self, id):
+        """
+        Update an enrollment by id
+        ---
+        tags:
+          - Enrollments
+        summary: Update an existing enrollment
+        description: This endpoint allows updating an existing enrollment by its unique identifier (ID).
+        parameters:
+          - in: path
+            name: id
+            required: true
+            type: integer
+            description: The unique identifier of the enrollment to update
+        responses:
+            200:
+                description: Enrollment updated successfully
+                schema:
+                type: object
+                properties:
+                    id:
+                    type: integer
+                    description: The unique identifier of the enrollment
+                    student_id:
+                    type: integer
+                    description: The ID of the student enrolled
+                    course_id:
+                    type: integer
+                    description: The ID of the course in which the student is enrolled
+                    enrollment_date:
+                    type: string
+                    format: date-time
+                    description: The date when the student was enrolled in the course
+                    status:
+                    type: string
+                    description: The status of the enrollment (e.g., active, completed, dropped)
+            404:
+                description: Enrollment not found
+                schema:
+                type: object
+                properties:
+                    message:
+                    type: string
+                    description: Error message indicating that the enrollment was not found
+            400:
+                description: Error updating enrollment
+                schema:
+                type: object
+                properties:
+                    message:
+                    type: string
+                    description: Error message indicating that the enrollment could not be updated
+        """
         args = enrollment_args.parse_args()
         enrollment = EnrollmentModel.query.filter_by(id=id).first()
         if not enrollment:
@@ -67,6 +241,39 @@ class Enrollment(Resource):
             abort(400, message=f"Error: Could not update the enrollment. {str(e)}")
     @marshal_with(enrollment_fields)
     def delete(self, id):
+        """
+        Delete an enrollment by id
+        ---
+        tags:
+          - Enrollments
+        summary: Delete an enrollment by ID
+        description: This endpoint allows the deletion of an enrollment by its unique identifier (ID).
+        parameters:
+          - in: path
+            name: id
+            required: true
+            type: integer
+            description: The unique identifier of the enrollment to delete
+        responses:
+            204:
+                description: Enrollment deleted successfully
+            404:
+                description: Enrollment not found
+                schema:
+                type: object
+                properties:
+                    message:
+                    type: string
+                    description: Error message indicating that the enrollment was not found
+            400:
+                description: Error deleting enrollment
+                schema:
+                type: object
+                properties:
+                    message:
+                    type: string
+                    description: Error message indicating that the enrollment could not be deleted
+        """
         enrollment = EnrollmentModel.query.filter_by(id=id).first()
         if not enrollment:
             abort(404, message='Enrollment not found')
